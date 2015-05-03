@@ -1,0 +1,749 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.11.1/jquery.validate.min.js"></script>
+
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+<meta charset="utf-8">
+  <!-- Latest compiled and minified CSS -->
+  
+    
+<script>
+function checkna(val)
+{
+  if(val=="")
+    return "N/A";
+  else 
+    return val;
+}
+
+$(document).ready(function () {
+
+ 
+ $.validator.addMethod("pricecheck", function(value, element) {
+    return this.optional(element) ||  parseInt($('#to').val()) >= parseInt($('#from').val())
+}, "MaxPrice Should be greater than Minprice");
+
+$('#myForm').validate({
+rules: {
+            key_words:{
+        required:true
+      } ,
+      price_from:{
+          number:true,
+          min:0
+         
+          },
+      price_to:{
+          number:true,
+          min:0,
+          pricecheck:true
+         
+          
+      },
+      max_days:{
+      
+        digits:true,
+        min:1,
+      }
+      },
+      messages:{
+        key_words:{
+         required: "Please enter a key"
+        },
+        price_from:{
+          number:"Price should be a valid number",
+          min:"Minimum price cannot be below 0"
+        },
+        price_to:{
+          number:"Price should be a valid number"
+        },
+        max_days:{
+          digits:"Max handling time should be a valid digit",
+          min:"Max handling time should be greater han or equal to 1"
+        }
+
+      },
+      onfocusout: function(element) { $(element).valid()},
+        highlight: function(element) {
+            $(element).closest('.form-group').addClass('has-error');
+        },
+        unhighlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-error');
+          },
+           errorElement: 'span',
+        errorClass: 'help-block',
+        errorPlacement: function(error, element) {
+            if(element.parent('.input-group').length) {
+                error.insertAfter(element.parent());
+            } else {
+                error.insertAfter(element);
+            }
+        }
+
+  
+});
+ $("#mediaobject").hide();
+});
+var result;
+var numberOfPages=0;
+var displayedItems=0;
+var displayedPage=1;
+var from=1;
+var to=5;
+
+function checksmall(one,two)
+{
+  if(one<two)
+    return one;
+  else 
+    return two;
+}
+
+function cleardata()
+{
+ location.reload();
+}
+function ship(result){
+  if(result=="0.0" || result==""){
+    return "(FREE Shipping)";
+  }
+  else{
+    return "";
+  }
+}
+function rating(result){
+  if(result=="true"){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
+
+function moveToPage(value){
+  pageNum=value;
+  submitForm();
+  return false;
+}
+
+function increase(){
+  if(pageNum==to){
+  if(pageNum<(numberOfPages-5)){
+    from=from+5;
+    to=to+5;
+    pageNum=from;
+  }
+  else{
+    to=numberOfPages;
+    from=to-5;
+  }
+  }
+  else{
+  pageNum++;
+  }
+  submitForm();
+}
+function decrease(){
+  if(pageNum==from && from>=1)
+  {
+  to = to-5;
+  from=from-5;
+  pageNum=to;
+  }
+  else{
+    pageNum--;
+  }
+  submitForm();
+  
+}
+
+ window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '424817544344218',
+     version    : 'v2.3',
+    status : true, // check login status
+      cookie : true, // enable cookies to allow the server to access the session
+      xfbml  : true , // parse XFBML
+      oauth : true // Enable oauth authentication
+    });
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "//connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+function post_on_wall(ind)
+{
+    FB.login(function(response)
+    {
+        if (response.authResponse)
+        {
+       FB.ui({
+         
+       method: 'feed',
+       name: result["item"+ind]["basicInfo"]["title"],
+       link: result["item"+ind]["basicInfo"]["viewItemURL"],
+       description: "Price: $"+result["item"+ind]["basicInfo"]["convertedCurrentPrice"]+", Location:"+result["item"+ind]["basicInfo"]["location"],
+       picture: result["item"+ind]["basicInfo"]["galleryURL"],
+       caption: "Search information from eBay.com",
+       display: 'popup'
+       
+        },function(response){ if(response && response.post_id){alert("Posted Successfully");} });
+        }
+        else
+        {
+            alert('Not logged in');
+        }
+    }, { scope : 'publish_stream' });
+}
+
+function displayDetails(val){
+  
+  var division = $("#hid"+val);
+  var tabs="<div class=\"\">";
+  disp=division.css("display");
+  if(disp=="none"){
+   tabs = tabs+ '<ul class=\"nav nav-tabs\" role=\"tablist\" id=\"tab'+val+'\">';
+   tabs = tabs+'<li class=\"nav active\"><a href=\"#basic-info'+val+'\" data-toggle=\"tab\" role=\"tab\">Basic Info</a></li>';
+   tabs = tabs+'<li class=\"nav\"><a href=\"#seller-info'+val+'\" data-toggle=\"tab\" role=\"tab\">Seller Info</a></li>';
+   tabs = tabs+'<li class=\"nav\"><a href=\"#shipping-info'+val+'\" data-toggle=\"tab\" role=\"tab\">Shipping Info</a></li>'; 
+   tabs= tabs+'</ul>';
+   tabs=tabs+'<div class=\"tab-content\">';
+   tabs = tabs+'<div id=\"basic-info'+val+'\" class=\"tab-pane fade in active table-responsive\"><table class=\"\">';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Category Name</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["basicInfo"]["categoryName"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Condition</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["basicInfo"]["conditionDisplayName"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Buying Format</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["basicInfo"]["listingType"])+'</td></tr>';
+   tabs = tabs+'</table></div>';
+   tabs = tabs+'<div id=\"seller-info'+val+'\" class=\"tab-pane fade table-responsive\"><table class=\"\">';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>User Name</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["sellerInfo"]["sellerUserName"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Feedback Score</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["sellerInfo"]["feedbackScore"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Positive Feedback</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["sellerInfo"]["positiveFeedbackPercent"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Feedback Rating</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["sellerInfo"]["feedbackRatingStar"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Top Rated</b></td><td style=\"width:200px;\"><span>';
+   if(result["item"+val]["sellerInfo"]["topRatedSeller"]=="true"){
+     tabs = tabs + "<i class=\"glyphicon glyphicon-ok\" style=\"color:green\"></i>";
+   }
+   else{
+     tabs = tabs + "<i class=\"glyphicon glyphicon-remove\" style=\"color:red\"></i>";
+   }
+   tabs = tabs +'</td></tr>';
+   if(result["item"+val]["sellerInfo"]["sellerStoreURL"]!="")
+   {
+    if(result["item"+val]["sellerInfo"]["sellerStoreName"]=="")
+    {
+      
+    }
+    else
+    {
+      tabs=tabs+'<tr><td style=\"width:200px;\"><b>Store</b></td><td style=\"width:200px;\"><a target=\"_blank\" style=\"text-decoration:none;\" href=\"'+result["item"+val]["sellerInfo"]["sellerStoreURL"]+'\">'+result["item"+val]["sellerInfo"]["sellerStoreName"]+'</a></td></tr>'; 
+    }
+  
+ }
+ else
+ {
+   tabs=tabs+'<tr><td style=\"width:200px;\"><b>Store</b></td><td style=\"width:200px;\">'+checkna(result["item"+val]["sellerInfo"]["sellerStoreName"])+'</td></tr>';
+ }
+   tabs=tabs+'</table></div>';
+   
+   tabs = tabs+'<div id=\"shipping-info'+val+'\" class=\"tab-pane fade\"><table class=\"\">';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>Shipping type</b></td><td style=\"width:200px\">'+checkna(result["item"+val]["shippingInfo"]["shippingType"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>Handling time</b></td><td style=\"width:200px\">'+checkna(result["item"+val]["shippingInfo"]["handlingTime"])+' day(s)</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>Shipping locations</b></td><td style=\"width:200px\">'+checkna(result["item"+val]["shippingInfo"]["shipToLocations"])+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>Expedited shipping</b></td><td>';
+   if(result["item"+val]["shippingInfo"]["expeditedShipping"]=="true"){
+     tabs = tabs + "<span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span>";
+   }
+   else{
+     tabs = tabs + "<span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span>";
+   }
+   tabs= tabs+'</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>One day shipping</b></td><td style=\"width:200px\">';
+   if(result["item"+val]["shippingInfo"]["oneDayShippingAvailable"]=="true"){
+       tabs = tabs + "<i class=\"glyphicon glyphicon-ok\" style=\"color:green\"></i>";
+   }
+   else{
+     tabs = tabs + "<i class=\"glyphicon glyphicon-remove\" style=\"color:red\"></i>";
+   }
+  tabs=tabs+ '</td></tr>';
+   tabs=tabs+'<tr><td style=\"width:200px\"><b>Returns accepted</b></td><td>';
+   if(result["item"+val]["shippingInfo"]["returnsAccepted"]){
+       tabs = tabs + "<span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span>";
+   }
+   else{
+     tabs = tabs + "<span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span>";
+   }
+   tabs=tabs+'</td></tr>';
+   tabs=tabs+'</table></div>';
+   division.html(tabs+'</div>');
+   division.css("display","block");
+  }
+  else{
+    division.css("display","none");
+  }
+  }
+
+  function displayImage(ind){
+    if( $("#myModalImage").attr('src',result["item"+ind]["basicInfo"]["pictureURLSuperSize"])!="")
+    $("#myModalImage").attr('src',result["item"+ind]["basicInfo"]["pictureURLSuperSize"]);
+  else
+     $("#myModalImage").attr('src',result["item"+ind]["basicInfo"]["galleryURL"]);
+    $("#myModalLabel").text(result["item"+ind]["basicInfo"]["title"]);
+    
+  }
+  
+  function parseData(){
+    $("#holder").html("");
+    $("#result_count").html("");
+     $("#pageform").html("");
+    
+  if(result["ack"]=="No Resuts Found"){
+  var z = $("#result_count");
+  var head = '<h3 class=\"media-heading\" id=\"title\">No Results Found</h3>';
+  z.html(head);
+  }
+  else{
+  var z = $("#result_count");
+  var head = '<h3 class=\"media-heading\" id=\"title\">'+((pageNum-1)*parseInt(result["itemCount"])+1)+' - '+(checksmall((pageNum)*parseInt(result["itemCount"]),parseInt(result['resultCount'])))+' items out of '+result['resultCount']+'</h3>';
+  z.html(head);
+  var x= $("#holder");
+  x.html("");
+  var internal="";
+  for(i=0;i<parseInt(result["itemCount"]);i++){
+    var count1=0;
+  if(displayedItems<parseInt(result["resultCount"])){
+    count1++;
+  internal = internal + '<div class=\"media\" class=\"col-xs-12\" id=\"mediaobject\"><div class=\"col-md-2\"></div>';
+  
+  internal =internal+ "<div class=\"col-md-7\"><a data-toggle=\"modal\" data-target=\".bs-example-modal-lg\" onClick=\" return displayImage("+i+");\"><img id=\"imagesource"+i+"\" class=\"pull-left media-object\" src=\""+result["item"+i]["basicInfo"]["galleryURL"]+"\" style=\"width:60px;height:65px;\"></img></a>";
+  
+  internal = internal+'<div class=\"media-body\" style=\"padding-left:7px\"><h4 style=\"padding-left:0px;\" class=\"media-heading\" id=\"title\">';
+  
+  internal = internal+'<a href=\"'+result["item"+i]["basicInfo"]["viewItemURL"]+'\" id=\"media-heading-link\" style=\"text-decoration:none;\" target=\"_blank\">'+result["item"+i]["basicInfo"]["title"]+'</a></h4>';
+  
+
+  
+  internal = internal+'<b><div style=\"padding-left:0px; display:inline\" id=\"price\">Price :$'+result["item"+i]["basicInfo"]["convertedCurrentPrice"]+'</div></b>';
+  
+  internal = internal+'<div style=\"padding-left:2px; display:inline;\" id=\"shipping\">'+ship(result["item"+i]["basicInfo"]["shippingServiceCost"])+'</div>';
+  
+  internal = internal+'<div style=\"padding-left:15px; display:inline;font-style:italic\" id=\"location\"> Location:'+checkna(result["item"+i]["basicInfo"]["location"])+'</div>';
+  
+     if(rating(result["item"+i]["basicInfo"]["topRatedListing"]))
+     {
+     internal = internal+'<div style=\"padding-left:10px; display:inline;\" id=\"rated\" ><img src=\"http://cs-server.usc.edu:45678/hw/hw8/itemTopRated.jpg\" height=\"40px\" width=\"40px\"></img></div>';
+     }
+     else{
+       internal = internal+'<div style=\"padding-left:10px; display:inline;\" id=\"rated\" ></div>';
+     }
+    internal = internal+'<div style=\"padding-left:10px; display:inline;\" id=\"details\"><a id=\"view_details\" onclick=\"return displayDetails('+i+');\">View Details</a></div>';
+    
+    internal = internal+'<div style=\"padding-left:10px; display:inline;\" id=\"fb_div\"><a onclick=\"return post_on_wall('+i+');\"><img src=\"http://cs-server.usc.edu:45678/hw/hw8/fb.png\" height=\"20px\" width=\"20px\"></img></a></div>';
+    internal = internal + '<div class=\"panel\" id=\"hid'+i+'\" style=\"display:none;\"></div>'
+    internal = internal+'</div>';
+   internal = internal+'</div>';
+   <!-- Spacing for Desktop View -->
+   internal = internal+'<div class="col-md-2">';
+   internal = internal+'</div>';
+   internal = internal+'</div>';
+  displayedItems=count1+displayedItems;
+  }
+   }
+    x.html(internal);
+   numberOfPages=Math.ceil((result["resultCount"]/result["itemCount"]) );
+   var y= $("#pageform");
+   var content="<div><ul id=\"pages\" class=\"pagination pagination-sm\">";
+   if(pageNum!=1){
+     content= content+'<li id=\"decrement\" onclick=\"return decrease();\"><a href=\"\">&laquo</a></li>';
+   }
+   flag=0;
+  
+   for(i=from;i<=to;i++){
+  if((i)<= Math.ceil((result["resultCount"]/result["itemCount"]) ))   
+    {
+  if(i==pageNum)
+  {
+    content = content + '<li class=\"active\" id='+(i)+'><a>'+(i)+'</a></li>';
+  }
+  else{
+  content = content + '<li class=\"\" id='+(i)+'><a  onclick=\"return moveToPage('+(i)+');\">'+(i)+'</a></li>';
+  }
+  }
+  else{
+    flag=1;
+  }
+   }
+   if(flag!=1)
+   {
+        content= content+'<li id=\"increment\"><a onclick=\"return increase();\">&raquo</a></li>';
+   }
+
+   content = content+'</ul></div>';
+  y.html(content);
+}
+}
+
+  
+  
+
+var form;
+var pageNum=1; 
+$.validator.setDefaults({
+  submitHandler :function(){
+    form =$('#myForm').serialize();
+    pageNum=1;
+    to=5;
+    from=1;
+    displayedItems=0;
+   submitForm();
+  }
+});
+
+function nextPage(){
+  pageNum++;
+  submitForm();
+  return false;
+}
+function submitForm(){
+    //cleardata();
+    if($("#key_words"))
+   $.ajax({
+   type:'GET', 
+   url: 'http://jayavantcs571-env.elasticbeanstalk.com', 
+   data:(form+"&number="+ JSON.stringify(pageNum)), 
+   success: function(data) {
+   result = jQuery.parseJSON(data);
+   parseData();
+   
+   }});
+   return false;
+   }
+
+
+
+</script>
+<style>
+.checkbox-inline{
+  margin-right: 5px;
+}
+.checkbox-inline+.checkbox-inline{
+  margin-left: 0px;
+}
+.container-fluid{
+  margin-left: 0px;
+}
+.container{
+  margin-left: 0px;
+}
+.leftpad
+{
+  margin-left: 14px;
+}
+.error{
+  color:red;
+}
+
+</style>
+
+<div id="fb-root"></div>
+
+<script>
+(function() {
+    var e = document.createElement('script');
+    // replacing with an older version until FB fixes the cancel-login bug
+    e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
+    //e.src = 'scripts/all.js';
+    e.async = true;
+    document.getElementById('fb-root').appendChild(e);
+}());
+</script>
+<style type="text/css">
+
+label.error
+  {
+      
+    color:red;display:block;font-size:small;
+    text-align:left;
+  }
+.rightpadding{
+    padding-right:17px;
+   
+} 
+.leftpadding{
+    margin-left:14px;
+   
+} 
+#myform label.error
+  {
+      
+    color:red;display:block;font-size:small;
+    text-align:right;
+  }
+
+body{
+  font-family:Arial, Helvetica, sans-serif;
+}
+#logo{
+  padding-left:20px;
+  padding-top:10px;
+}
+#inner{
+  padding-top:20px;
+  font-weight:bold;
+  width:90%;
+}
+#inner table{
+  font-weight:bold;
+}
+
+#acForm td{
+  padding-top:0.5em;
+  padding-bottom : 0.5em;
+}
+#header{
+  font-size:250%;
+}
+
+.space_out{
+  padding-left:70px;
+  font-size:90%;
+  font-weight:Normal;
+}
+.inner_space_out{
+  margin-left:40px;
+}
+#buttons{
+  padding-top:25px;
+  padding-left: 580px;
+}
+#submit{
+  margin-left:5px;
+}
+</style>
+
+<body >
+
+<div class="container-fluid " style="margin-top:30px;">
+ <div class="col-md-2"></div>
+<table id="header"><tr><td><img id="logo" src="http://cs-server.usc.edu:45678/hw/hw6/ebay.jpg" height="70px" width="150px"></td><td id="shopping">Shopping</td></tr></table><br>
+
+
+  
+  <form id="myForm" name="myForm" class="form-horizontal "  role="form">
+    <div class="col-md-2"></div>
+    <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group">
+
+          <label for="inputEmail" class="col-md-4 control-label">Key Words: *</label>
+          <div class="col-md-8">
+            <input type="text" class="form-control"  placeholder="Enter Keyword" id="key_words" name="key_words">
+          </div>
+        </div>
+      </div>
+      </div>
+    <div class="col-md-2"></div>
+    <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group">
+
+           <label for="inputLabel4" class=" col-md-4 control-label">Price Range: </label>
+          <div class="col-md-4">
+            <input class="form-control" id="from" type="text" placeholder="from ($)" name="price_from">
+          </div>
+           <div class="col-md-4">
+           <input type="text" class="form-control" id="to" placeholder="to ($)" name="price_to">
+          </div>
+        </div>
+      </div>
+      </div>
+
+       <div class="col-md-2"></div>
+     <div class="row">
+       <div class="col-sm-6">
+        <div class="form-group">
+          <label for="inputEmail" class="col-sm-4 control-label">Condition:</label>
+          <div class="col-md-8">
+           <label class="checkbox-inline">
+  <input type="checkbox" name="cond[]" id="inlineCheckbox1" value="new"> New
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" name="cond[]" id="inlineCheckbox2" value="used"> Used
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" name="cond[]" id="inlineCheckbox3" value="verygood"> Very Good
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" id="inlineCheckbox3" name="cond[]" value="good"> Good
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" id="inlineCheckbox3" name="cond[]" value="acceptable"> Acceptable
+</label>
+          </div>
+        </div>
+      </div>
+
+     </div>
+   <div class="col-md-2"></div>
+          <div class="row">
+       <div class="col-sm-6">
+        <div class="form-group">
+          <label for="inputEmail" class="col-md-4 control-label">Buying Formats: </label>
+          <div class="col-md-8">
+           <label class="checkbox-inline">
+  <input type="checkbox" id="inlineCheckbox1" name="buying[]" value="buyitnow"> Buy it now 
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" name="buying[]" id="inlineCheckbox2" value="auction">  Auction
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" name="buying[]" id="inlineCheckbox3" value="classifiedads"> Classified ads
+</label>
+
+          </div>
+        </div>
+      </div>
+
+     </div>
+   <div class="col-md-2"></div>
+  <div class="row">
+       <div class="col-sm-6">
+        <div class="form-group">
+          <label for="inputEmail" class="col-md-4 control-label">Seller: </label>
+          <div class="col-md-8">
+           <label class="checkbox-inline">
+  <input type="checkbox" name="return" id="inlineCheckbox1" value="NA"> Return Accepted 
+</label>
+
+
+          </div>
+        </div>
+      </div>
+
+     </div>
+   <div class="col-md-2"></div>
+   <div class="row">
+       <div class="col-sm-6">
+        <div class="form-group">
+          <label for="inputEmail" class="col-md-4 control-label">Shipping: </label>
+          <div class="col-md-8">
+           <label class="checkbox-inline">
+  <input type="checkbox" name="free" id="inlineCheckbox1" value="option1"> Free Shipping
+</label>
+<label class="checkbox-inline">
+  <input type="checkbox" name="expedited" id="inlineCheckbox2" value="option2">  Expedited Shipping
+</label>
+
+
+          </div>
+        </div>
+      </div>
+
+     </div>
+        <div class="col-md-2"></div>
+  <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group">
+           <label for="inputEmail" class="col-md-4 control-label"></label>
+          <div class="col-md-8">
+            <input type="text" class="form-control" placeholder="Max handling time(days)" id="max_days" name="max_days">
+            
+          </div>
+        </div>
+      </div>
+      </div>
+   <div class="col-md-2"></div>
+ <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group">
+          <label for="inputEmail" class="col-md-4 control-label">Sort by: </label>
+          <div class="col-md-8">
+           <select name="sort" class="form-control">
+<option value="BestMatch" name="BestMatch">Best Match</option>
+<option name="CurrentPriceHighest" value="CurrentPriceHighest">Price: Highest First</option>
+<option value="PricePlusShippingHighest" name="PricePlusShippingHighest">Price + Shipping: Highest First</option>
+<option value="PricePlusShippingLowest" name="PricePlusShippingLowest">Price + Shipping: Lowest First</option>
+</select>
+          </div>
+        </div>
+      </div>
+      </div>
+   <div class="col-md-2"></div>
+       <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group">
+          <label for="inputEmail" class="col-md-4 control-label">Results per page: </label>
+          <div class="col-md-8">
+            <select name="result" class="form-control">
+<option name="5" value="5">5</option>
+<option name="10" value="10">10</option>
+</select>
+          </div>
+        </div>
+      </div>
+      </div>
+         <div class="col-md-2"></div>
+ <div class="row">
+      <div class="col-sm-6 ">
+        <div class="form-group text-right rightpadding">
+          
+         
+                 <input class="btn btn-default" onclick="cleardata()" type="reset" value="Clear">
+<input class="btn btn-primary " id="submit" type="submit"  name="search" value="Search">
+
+          
+        </div>
+      </div>
+      </div>
+
+
+  </form>
+
+</div><!-- /.container -->
+   <div class="col-md-4"></div>
+<div id="clear">
+<br>
+<div class="container-fluid">
+<div class="col-xs-12" style="padding-left:0px;">
+<div class="col-md-2">
+</div>
+
+  
+<div id="result_count">
+
+</div></div></div>
+<br>
+
+<div id="holder">
+</div>
+   <div class="col-md-2 leftpad"></div>
+<div id="pageform" class="container">
+
+</div>
+<!-- Small modal -->
+<!--button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-sm" onClick=" return displayImage();">Small modal</button-->
+<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" id="myModal">
+  <button style="padding:10px;" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+       <center><h4 class="modal-title"  id="myModalLabel"></h4></center>
+      <hr>
+      <div class="modal-body">
+      <center><img id="myModalImage" class="img-responsive"></img></center>  
+      </div>
+      </div>
+  </div>
+  
+</div>
+</div>
+</body>
+</html>
